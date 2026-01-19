@@ -23,6 +23,7 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 /application/cache/*
 /uploads/*
 /python/*
+/vendor/
 /.env
 .DS_Store
 Thumbs.db
