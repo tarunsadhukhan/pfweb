@@ -124,7 +124,19 @@ body.login-page {
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
-    <a href="../../index2.html"><b>PF </b>WEB</a>
+    <a href="../../index2.html" style="
+      color: #1976d2;
+      text-decoration: underline;
+      font-weight: bold;
+      font-size: 2.4rem;
+      letter-spacing: 2px;
+      border-bottom: 2px solid #1976d2;
+      padding-bottom: 4px;
+      transition: color 0.2s, border-bottom-color 0.2s;
+    "
+    onmouseover="this.style.color='#0056b3';this.style.borderBottomColor='#0056b3'"
+    onmouseout="this.style.color='#1976d2';this.style.borderBottomColor='#1976d2'"
+    ><b>PF-ESI </b><span style="color:#007bff;">WEB</span></a>
   </div>
 
 
