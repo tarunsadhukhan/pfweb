@@ -258,29 +258,37 @@ class Pfupload_Model extends CI_Model {
      * Insert PF line upload data - All EPF+EPS (upshare=1, old dates)
      */
     public function insertPfLineAllOld($maxpfhdrid, $gdate, $companyId, $upshare) {
+  
         $sql = "INSERT INTO EMPMILL12.tbl_pf_line_upload_data (
-                    pf_hdr_upload_id, uan_id, uan_no, gross_wages, epf_wages, eps_wages,
-                    edli_wages, epf_contribution, eps_contribution, epf_eps_diff_contribution,
-                    ncp_days, pf_gen_id, is_active
-                ) 
-                SELECT ?, tpg.uan_id, tum.uan_no, tpg.gross_wages, tpg.epf_wages,
-                    eps_wages, edli_wages, round(tpg.epf_wages*.1,0) epf_contribution, 
-                    round(tpg.eps_wages*.0833,0) eps_contribution,
-                    round(tpg.epf_wages*.1,0)-  round(tpg.eps_wages*.0833,0) epf_eps_diff_contribution, ncp_days, tpg.pf_gen_id, 1 AS active
-                FROM EMPMILL12.tbl_pf_generation AS tpg
-                LEFT JOIN EMPMILL12.tbl_uan_master AS tum ON tpg.uan_id = tum.uan_id
-                LEFT JOIN (
-                    SELECT tplud.pf_gen_id, tplud.uan_id uanid, SUM(tplud.epf_contribution) epfcontribution 
-                    FROM EMPMILL12.tbl_pf_line_upload_data AS tplud
-                    WHERE tplud.is_active = 1  
-                    GROUP BY tplud.pf_gen_id, tplud.uan_id
-                ) x ON x.pf_gen_id = tpg.pf_gen_id 
-                WHERE tpg.month_end_date = ?
-                    AND tum.adhar_seeded = 1
-                    AND tpg.company_id = ?
-                    AND tpg.is_active = 1
-                    AND x.epfcontribution IS NULL";
-        $this->db->query($sql, array($maxpfhdrid, $gdate, $companyId));
+            pf_hdr_upload_id, uan_id, uan_no, gross_wages, epf_wages, eps_wages, edli_wages,
+            epf_contribution, eps_contribution, epf_eps_diff_contribution, ncp_days, pf_gen_id, is_active
+        )
+        SELECT ?, tpg.uan_id, tum.uan_no, tpg.gross_wages, tpg.epf_wages,
+            tpg.eps_wages, tpg.edli_wages, ROUND(tpg.epf_wages * 0.1, 0) AS epf_contribution,
+            ROUND(tpg.eps_wages * 0.0833, 0) AS eps_contribution,
+            ROUND(tpg.epf_wages * 0.1, 0) - ROUND(tpg.eps_wages * 0.0833, 0) AS epf_eps_diff_contribution,
+            tpg.ncp_days, tpg.pf_gen_id, 1 AS is_active
+        FROM EMPMILL12.tbl_pf_generation AS tpg
+        LEFT JOIN EMPMILL12.tbl_uan_master AS tum ON tpg.uan_id = tum.uan_id
+        WHERE tpg.month_end_date = ?
+            AND tum.adhar_seeded = 1
+            AND tpg.company_id = ?
+            AND tpg.is_active = 1
+            AND NOT EXISTS (
+                SELECT 1
+                FROM EMPMILL12.tbl_pf_line_upload_data tplud
+                JOIN EMPMILL12.tbl_pf_hdr_upload_data tphud ON tphud.pf_hdr_upload_id = tplud.pf_hdr_upload_id
+                WHERE tplud.is_active = 1
+                    AND tphud.is_active = 1
+                    AND tphud.trrn_status IN (2,3)
+                    AND tphud.month_end_date = ?
+                    AND tplud.pf_gen_id = tpg.pf_gen_id
+                    AND tplud.uan_id = tpg.uan_id
+                    and tphud.company_id=?
+            )";
+//echo $sql;
+//echo $maxpfhdrid . ' - ' . $gdate . ' - ' . $companyId . "\n";
+    $this->db->query($sql, array($maxpfhdrid, $gdate, $companyId, $gdate, $companyId));
     }
 
     /**
@@ -332,11 +340,11 @@ class Pfupload_Model extends CI_Model {
      */
     public function insertPfLineEpfOnlyOld($maxpfhdrid, $gdate, $companyId) {
         $sql = "INSERT INTO EMPMILL12.tbl_pf_line_upload_data (
-                    pf_hdr_upload_id, uan_id, uan_no, gross_wages, eps_wages, edli_wages,
+                    pf_hdr_upload_id, uan_id, uan_no, gross_wages,epf_wages, eps_wages, edli_wages,
                     epf_contribution, eps_contribution, epf_eps_diff_contribution,
                     ncp_days, pf_gen_id, is_active
                 )
-                SELECT ?, tpg.uan_id, tum.uan_no, tpg.gross_wages, 0 AS eps_wages,
+                SELECT ?, tpg.uan_id, tum.uan_no, tpg.gross_wages,tpg.epf_wages, 0 AS eps_wages,
                     0 AS edli_wages, ROUND(tpg.gross_wages * 0.10, 0) AS epf_contribution,
                     0 AS eps_contribution, 0 AS epf_eps_diff_contribution,
                     tpg.ncp_days, tpg.pf_gen_id, 1 AS is_active
@@ -371,10 +379,10 @@ class Pfupload_Model extends CI_Model {
             $upshr = '1,2,3';
         }
         if ($upshare == 2) {
-            $upshr = '1,3';
+            $upshr = '1,2';
         }
         if ($upshare == 3) {
-            $upshr = '1,2';
+            $upshr = '1,3';
         }
 
         $sql = "INSERT INTO EMPMILL12.tbl_pf_line_upload_data (

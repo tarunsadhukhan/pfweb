@@ -77,6 +77,7 @@ class Pfoutstandingdatae extends CI_Controller {
         $compid = $this->session->userdata('company_id');
         $upfromdate = $this->input->post('upfromdate');
         $uptodate = $this->input->post('uptodate');
+        $ded_type = $this->input->post('ded_type');
         $pfgendate=$upfromdate;
         $upfromdate=substr($pfgendate,6,4).'-'.substr($pfgendate,3,2).'-'.substr($pfgendate,0,2);
         $pfgendate=$uptodate;
@@ -147,7 +148,7 @@ GROUP BY
 	) g on g.month_end_date=k.month_end_date
   order by k.month_end_date";
 	 
-
+echo $sql;
 $query = $this->db->query($sql,$upfromdate,$uptodate,$compid,$compid );
          $records = $query->result();
          $sln=$query->num_rows();

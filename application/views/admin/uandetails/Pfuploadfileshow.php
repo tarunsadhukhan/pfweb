@@ -37,6 +37,13 @@ use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
 
 
 <style>
+/* Prevent pointer events on the search input row to avoid sorting trigger */
+table.display thead tr.search-row th {
+    pointer-events: none;
+}
+table.display thead tr.search-row th input {
+    pointer-events: auto;
+}
 
 .nav-tabs .nav-link {
             font-size: 24px; /* Increase font size */
@@ -380,7 +387,7 @@ table.dataTable {
             <h2 class="mt-3">PF Upload Header</h2>
             <table id="spgdailyrecordTable" class="display">
         <thead>
-            <tr>
+            <tr class="search-row">
                 <th>Record Id</th>
                 <th>Month End Date</th>
                 <th>TRRN No </th>
@@ -398,7 +405,25 @@ table.dataTable {
                 <th>stattypid</th>
                 <th>Batch No</th>
                 <th>No of Person</th>
-                
+            </tr>
+            <tr>
+                <th><input type="text" placeholder="Search Record Id" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Month End Date" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search TRRN No" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Tran Type" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Challan Date" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Ac 1 Amount" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Ac 2 Amount" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Ac 10 Amount" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Ac 21 Amount" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Ac 22 Amount" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Total Amount" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Status" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Payment Date" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search statusid" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search stattypid" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Batch No" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search No of Person" style="width:100%" /></th>
             </tr>
         </thead>
         <tbody>
@@ -503,6 +528,34 @@ table.dataTable {
 
 
 <script>
+// Add column search for all DataTables
+$(document).ready(function() {
+    // For each table with .display class
+    $('table.display').each(function() {
+        var table = $(this).DataTable();
+        // Prevent sorting when clicking on the search input row
+        var $thead = $(this).find('thead');
+        // Prevent sorting when clicking on the search input row (by disabling pointer events in CSS)
+        // Setup - add a text input to each header cell
+        $thead.find('tr:eq(1) th').each(function(i) {
+            var that = table;
+            $('input', this).on('click mousedown mouseup keyup change', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+            });
+            $('input', this).on('keyup change', function(e) {
+                var val = this.value;
+                // Use regex for partial and numeric search, allow 0 and substrings
+                if (that.column(i).search() !== val) {
+                    that
+                        .column(i)
+                        .search(val ? val : '', true, false, true) // regex, smart, case-insensitive
+                        .draw();
+                }
+            });
+        });
+    });
+});
 $(function () {
   
      //Initialize Select2 Elements

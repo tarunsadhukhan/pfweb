@@ -142,18 +142,25 @@ table.dataTable thead th,
             action=""  >
 
       <div class="form-row">
-						<div class="form-group col-md-2" >
-						  <label for="purchaseDetailsPurchaseDate">Date From<span class="text-center">*</span></label>
-						  <input type="text" style="height: 50px; color:blue; font-style: bold; font-size: 28px;"
+                    <div class="form-group col-md-2" >
+                      <label for="purchaseDetailsPurchaseDate">Date From<span class="text-center">*</span></label>
+                      <input type="text" style="height: 50px; color:blue; font-style: bold; font-size: 28px;"
                             class="form-control datepicker text-center" id="upfromdate" 
                             name="upfromdate"    >
-						</div>
-						<div class="form-group col-md-2" >
-						  <label for="purchaseDetailsPurchaseDate">Date To<span class="text-center">*</span></label>
-						  <input type="text" style="height: 50px; color:blue; font-style: bold; font-size: 28px;"
+                    </div>
+                    <div class="form-group col-md-2" >
+                      <label for="purchaseDetailsPurchaseDate">Date To<span class="text-center">*</span></label>
+                      <input type="text" style="height: 50px; color:blue; font-style: bold; font-size: 28px;"
                             class="form-control datepicker text-center" id="uptodate" 
                             name="uptodate"    >
-						</div>
+                    </div>
+                    <div class="form-group col-md-2" style="margin-left: 30px ;">
+                        <label for="data_type">Select Ded Type:</label>
+                        <select name="ded_type" id="ded_type" class="form-control" style="height: 50px; color:blue; font-style: bold; font-size: 20px;">
+                            <option value="deduction">As per Deduction</option>
+                            <option value="upload">As per Upload</option>
+                        </select>
+                    </div>
             <div class="form-group col-md-2" style="margin-left: 30px;">
 						    <label for="purchaseDetailsPurchaseDate">Show <span class="text-center"></span></label>
                             <button name="submit" id="showpfupdata" style="height: 50px;" type="submit" class="form-control btn btn-primary">Show</button>
@@ -194,9 +201,27 @@ table.dataTable thead th,
         <thead>
             <tr>
                 <th colspan="1">Month</th>
-                <th colspan="4">PF Deducted</th>
+                <th colspan="4" id="pf_deducted_header">PF Deducted</th>
                 <th colspan="4">PF Payment</th>
                 <th rowspan="1">Outstanding</th>
+            </script>
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                var select = document.getElementById('data_type');
+                var header = document.getElementById('pf_deducted_header');
+                if (select && header) {
+                  function updateHeader() {
+                    if (select.value === 'deduction') {
+                      header.textContent = 'PF Deducted as per Deduction';
+                    } else {
+                      header.textContent = 'PF Deducted as per Upload';
+                    }
+                  }
+                  select.addEventListener('change', updateHeader);
+                  updateHeader(); // Set initial value
+                }
+              });
+            </script>
             </tr>
             <tr>
                 <th>Month End Date</th>
@@ -598,7 +623,9 @@ $("#showpfupdata").click(function(event){
              var companyId=$('#companyId').val();
              var upfromdate= $('#upfromdate').val();
              var uptodate= $('#uptodate').val();
-            table = $('#spgdailyrecordTable').DataTable({
+             var ded_type= $('#ded_type').val();
+             
+             table = $('#spgdailyrecordTable').DataTable({
                 autoWidth: true,
                                 ajax: {
                     url: "<?php echo base_url('admin/uandetails/Pfoutstandingdatae/Pfoutstandingdatae'); ?>",
@@ -607,6 +634,7 @@ $("#showpfupdata").click(function(event){
                         d.companyId=$('#companyId').val();
                         d.upfromdate=upfromdate;
                         d.uptodate=uptodate;
+                        d.ded_type=ded_type;
                     }
                   },
                   columnDefs: [
