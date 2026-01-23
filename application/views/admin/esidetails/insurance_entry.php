@@ -421,7 +421,7 @@ $(document).ready(function() {
  
 $("#resetesidata").click(function(event){
   event.preventDefault(); 
-  alert('reset');
+//  alert('reset');
   $('#ebno').val('');
   $('#ipno').val('');
   $('#name').val('');
