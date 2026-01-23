@@ -71,6 +71,15 @@ class Pfuploadfileshow extends CI_Controller {
 		$this->load->view('admin/uandetails/Pfuploadfileshow', $data_to_pass);	
 	}
 
+	public function summaryreport() {
+		$company_id = $this->session->userdata('company_id');
+
+		if (strlen($company_id)==0) { 
+			redirect('admin/login/logout');
+		}
+
+		$this->load->view('admin/uandetails/Pfsummaryreport');
+	}
 
     public function Pfupddatalast() {
         $compid = $this->input->post('companyId');
@@ -520,6 +529,244 @@ class Pfuploadfileshow extends CI_Controller {
 
         // Output
         $writer = new Xlsx($spreadsheet);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+    }
+
+
+
+
+
+    private function _getSummaryRecords($fromdate_formatted, $todate_formatted, $compid) {
+        $sql = "select date_format(gen.month_end_date,'%d-%m-%Y') monthenddate,
+	gen.*,
+	upl.*,
+	pay.*,gen.epfcont_g -pay.epfcont_p epfcont_od,gen.epscont_g -pay.epscont_p epscont_od,gen.epfepscont_g -pay.epfepsdiff_p epfepsdiff_od,
+	gen.admchgs_g -pay.admchgs_p admchgs_od,
+	upl.epfcont_d -pay.epfcont_p epfcont_ou,upl.epscont_d -pay.epscont_p epscont_ou,upl.epfepsdiff_d  -pay.epfepsdiff_p epfepsdiff_ou,
+	upl.admchgs_d -pay.admchgs_p admchgs_ou,
+	gen.epfcont_g -upl.epfcont_d epfcont_pu,gen.epscont_g -upl.epscont_d epscont_pu,gen.epfepscont_g -upl.epfepsdiff_d epfepsdiff_pu,
+	gen.admchgs_g -upl.admchgs_d admchgs_pu
+        from (
+                select tpg.month_end_date,sum(tpg.epf_contibution) epfcont_g,sum(tpg.eps_contribution) epscont_g,sum(tpg.epf_eps_diff_contribution) epfepscont_g,
+                round(sum((tpg.epf_wages))*.01,0) admchgs_g,
+                sum(tpg.epf_contibution)+sum(tpg.eps_contribution)+sum(tpg.epf_eps_diff_contribution) +
+                round(sum((tpg.epf_wages))*.01,0) total_g
+                from EMPMILL12.tbl_pf_generation tpg where tpg.is_active =1 and tpg.month_end_date between '$fromdate_formatted' and '$todate_formatted' group by tpg.month_end_date
+                ) gen
+                left join (
+				select month_end_date ,sum(epfcont_d) epfcont_d,sum(epscont_d ) epscont_d,sum(epfepsdiff_d) epfepsdiff_d,
+				sum(ac2amt_d+ac21amt_d+ac22amt_d) admchgs_d,
+				sum(epfcont_d)+sum(epscont_d )+sum(epfepsdiff_d)+sum(ac2amt_d+ac21amt_d+ac22amt_d) total_d
+				from (
+				select tphud.month_end_date, sum(tplud.epf_contribution) epfcont_d,sum(tplud.eps_contribution ) epscont_d,
+				sum(tplud.epf_eps_diff_contribution ) epfepsdiff_d,
+				(tphud.ac_2_amount) ac2amt_d,(tphud.ac_21_amount ) ac21amt_d,(tphud.ac_22_amount ) ac22amt_d,
+				tphud.trrn_amount ,tphud.ac_1_amount ,tphud.ac_10_amount
+				from EMPMILL12.tbl_pf_hdr_upload_data tphud
+				join EMPMILL12.tbl_pf_line_upload_data tplud  on tphud.pf_hdr_upload_id =tplud.pf_hdr_upload_id and tplud.is_active =1
+				where tphud.is_active=1 and tphud.month_end_date between '$fromdate_formatted' and '$todate_formatted' and tphud.company_id = $compid
+				and tphud.trrn_status in (2,3) AND tphud.main not in (1)
+				group by tphud.month_end_date,tphud.ac_2_amount,tphud.ac_21_amount ,tphud.ac_22_amount,
+				tphud.trrn_amount ,tphud.ac_1_amount ,tphud.ac_10_amount
+				) g
+				group by month_end_date
+                ) upl on gen.month_end_date =upl.month_end_date
+				left join (
+				select month_end_date ,sum(epfcont_p) epfcont_p,sum(epscont_p ) epscont_p,sum(epfepsdiff_p) epfepsdiff_p,
+				sum(ac2amt_p+ac21amt_p+ac22amt_p) admchgs_p,
+				sum(epfcont_p)+sum(epscont_p )+sum(epfepsdiff_p)+sum(ac2amt_p+ac21amt_p+ac22amt_p) total_p
+ 				from (
+				select tphud.month_end_date, sum(tplud.epf_contribution) epfcont_p,sum(tplud.eps_contribution ) epscont_p,
+				sum(tplud.epf_eps_diff_contribution ) epfepsdiff_p,
+				(tphud.ac_2_amount) ac2amt_p,(tphud.ac_21_amount ) ac21amt_p,(tphud.ac_22_amount ) ac22amt_p,
+				tphud.trrn_amount ,tphud.ac_1_amount ,tphud.ac_10_amount
+				from EMPMILL12.tbl_pf_hdr_upload_data tphud
+				join EMPMILL12.tbl_pf_line_upload_data tplud  on tphud.pf_hdr_upload_id =tplud.pf_hdr_upload_id and tplud.is_active =1
+				where tphud.is_active=1 and tphud.month_end_date between '$fromdate_formatted' and '$todate_formatted' and tphud.company_id = $compid
+				and tphud.trrn_status in (3) AND tphud.main not in (1)
+				group by tphud.month_end_date,tphud.ac_2_amount,tphud.ac_21_amount ,tphud.ac_22_amount,
+				tphud.trrn_amount ,tphud.ac_1_amount ,tphud.ac_10_amount
+				) g
+				group by month_end_date
+                ) pay on gen.month_end_date =pay.month_end_date
+                order by gen.month_end_date";
+
+        $query = $this->db->query($sql);
+        return $query->result();
+    }
+
+    public function getSummaryData() {
+        $compid = $this->session->userdata('company_id');
+        $fromdate = $this->input->post('fromdate');
+        $todate = $this->input->post('todate');
+
+        // Format dates from dd-mm-yyyy to yyyy-mm-dd
+        $fromdate_formatted = substr($fromdate, 6, 4) . '-' . substr($fromdate, 3, 2) . '-' . substr($fromdate, 0, 2);
+        $todate_formatted = substr($todate, 6, 4) . '-' . substr($todate, 3, 2) . '-' . substr($todate, 0, 2);
+
+        $records = $this->_getSummaryRecords($fromdate_formatted, $todate_formatted, $compid);
+
+        $data = [];
+        foreach ($records as $record) {
+            $total_od = ($record->epfcont_od ?? 0) + ($record->epscont_od ?? 0) + ($record->epfepsdiff_od ?? 0) + ($record->admchgs_od ?? 0);
+            $total_ou = ($record->epfcont_ou ?? 0) + ($record->epscont_ou ?? 0) + ($record->epfepsdiff_ou ?? 0) + ($record->admchgs_ou ?? 0);
+            $total_pu = ($record->epfcont_pu ?? 0) + ($record->epscont_pu ?? 0) + ($record->epfepsdiff_pu ?? 0) + ($record->admchgs_pu ?? 0);
+            $data[] = [
+                $record->monthenddate,
+                $record->epfcont_g,
+                $record->epscont_g,
+                $record->epfepscont_g,
+                $record->admchgs_g,
+                $record->total_g,
+                $record->epfcont_d ?? 0,
+                $record->epscont_d ?? 0,
+                $record->epfepsdiff_d ?? 0,
+                $record->admchgs_d ?? 0,
+                $record->total_d ?? 0,
+                $record->epfcont_p ?? 0,
+                $record->epscont_p ?? 0,
+                $record->epfepsdiff_p ?? 0,
+                $record->admchgs_p ?? 0,
+                $record->total_p ?? 0,
+                $record->epfcont_od ?? 0,
+                $record->epscont_od ?? 0,
+                $record->epfepsdiff_od ?? 0,
+                $record->admchgs_od ?? 0,
+                $total_od,
+                $record->epfcont_ou ?? 0,
+                $record->epscont_ou ?? 0,
+                $record->epfepsdiff_ou ?? 0,
+                $record->admchgs_ou ?? 0,
+                $total_ou,
+                $record->epfcont_pu ?? 0,
+                $record->epscont_pu ?? 0,
+                $record->epfepsdiff_pu ?? 0,
+                $record->admchgs_pu ?? 0,
+                $total_pu
+            ];
+        }
+
+        echo json_encode(['data' => $data]);
+    }
+
+    public function exportSummaryExcel() {
+        $compid = $this->session->userdata('company_id');
+        $company_name = $this->session->userdata('company_name');
+        $fromdate = $this->input->get('fromdate');
+        $todate = $this->input->get('todate');
+
+        // Format dates
+        $fromdate_formatted = substr($fromdate, 6, 4) . '-' . substr($fromdate, 3, 2) . '-' . substr($fromdate, 0, 2);
+        $todate_formatted = substr($todate, 6, 4) . '-' . substr($todate, 3, 2) . '-' . substr($todate, 0, 2);
+
+        $records = $this->_getSummaryRecords($fromdate_formatted, $todate_formatted, $compid);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $filename = 'PF_Summary_Report_' . date('Y-m-d') . '.xlsx';
+
+        // Styles
+        $bold16 = [
+            'font' => ['bold' => true, 'size' => 16],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+        ];
+        $borderStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+                ]
+            ]
+        ];
+        $greenBorderStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => '00FF00']
+                ]
+            ]
+        ];
+
+        // Header rows
+        $sheet->mergeCells('A1:AE1');
+        $sheet->setCellValue('A1', $company_name);
+        $sheet->getStyle('A1')->applyFromArray($bold16);
+
+        $sheet->mergeCells('A2:AE2');
+        $sheet->setCellValue('A2', "PF Dues & Outstanding Report for the Period from $fromdate To $todate");
+        $sheet->getStyle('A2')->applyFromArray($bold16);
+
+        // Table headers
+        $headers = ['Month End Date', 'EPF Cont G', 'EPS Cont G', 'EPF EPS Diff G', 'Adm Chgs G', 'Total G',
+            'EPF Cont D', 'EPS Cont D', 'EPF EPS Diff D', 'Adm Chgs D', 'Total D',
+            'EPF Cont P', 'EPS Cont P', 'EPF EPS Diff P', 'Adm Chgs P', 'Total P',
+            'EPF Cont OD', 'EPS Cont OD', 'EPF EPS Diff OD', 'Adm Chgs OD', 'Total OD',
+            'EPF Cont OU', 'EPS Cont OU', 'EPF EPS Diff OU', 'Adm Chgs OU', 'Total OU',
+            'EPF Cont PU', 'EPS Cont PU', 'EPF EPS Diff PU', 'Adm Chgs PU', 'Total PU'];
+        $sheet->fromArray($headers, NULL, 'A3');
+        $sheet->getStyle('A3:AE3')->applyFromArray($bold16);
+
+        // Data rows
+        $row = 4;
+        foreach ($records as $record) {
+            $sheet->setCellValue('A' . $row, $record->monthenddate);
+            $sheet->setCellValue('B' . $row, $record->epfcont_g);
+            $sheet->setCellValue('C' . $row, $record->epscont_g);
+            $sheet->setCellValue('D' . $row, $record->epfepscont_g);
+            $sheet->setCellValue('E' . $row, $record->admchgs_g);
+            $sheet->setCellValue('F' . $row, $record->total_g);
+            $sheet->setCellValue('G' . $row, $record->epfcont_d ?? 0);
+            $sheet->setCellValue('H' . $row, $record->epscont_d ?? 0);
+            $sheet->setCellValue('I' . $row, $record->epfepsdiff_d ?? 0);
+            $sheet->setCellValue('J' . $row, $record->admchgs_d ?? 0);
+            $sheet->setCellValue('K' . $row, $record->total_d ?? 0);
+            $sheet->setCellValue('L' . $row, $record->epfcont_p ?? 0);
+            $sheet->setCellValue('M' . $row, $record->epscont_p ?? 0);
+            $sheet->setCellValue('N' . $row, $record->epfepsdiff_p ?? 0);
+            $sheet->setCellValue('O' . $row, $record->admchgs_p ?? 0);
+            $sheet->setCellValue('P' . $row, $record->total_p ?? 0);
+            $sheet->setCellValue('Q' . $row, $record->epfcont_od ?? 0);
+            $sheet->setCellValue('R' . $row, $record->epscont_od ?? 0);
+            $sheet->setCellValue('S' . $row, $record->epfepsdiff_od ?? 0);
+            $sheet->setCellValue('T' . $row, $record->admchgs_od ?? 0);
+            $sheet->setCellValue('U' . $row, $record->total_od ?? 0);
+            $sheet->setCellValue('V' . $row, $record->epfcont_ou ?? 0);
+            $sheet->setCellValue('W' . $row, $record->epscont_ou ?? 0);
+            $sheet->setCellValue('X' . $row, $record->epfepsdiff_ou ?? 0);
+            $sheet->setCellValue('Y' . $row, $record->admchgs_ou ?? 0);
+            $sheet->setCellValue('Z' . $row, $record->total_ou ?? 0);
+            $sheet->setCellValue('AA' . $row, $record->epfcont_pu ?? 0);
+            $sheet->setCellValue('AB' . $row, $record->epscont_pu ?? 0);
+            $sheet->setCellValue('AC' . $row, $record->epfepsdiff_pu ?? 0);
+            $sheet->setCellValue('AD' . $row, $record->admchgs_pu ?? 0);
+            $sheet->setCellValue('AE' . $row, $record->total_pu ?? 0);
+
+            // Check if all outstanding columns are zero
+            $outstanding = ($record->epfcont_od ?? 0) + ($record->epscont_od ?? 0) + ($record->epfepsdiff_od ?? 0) + ($record->admchgs_od ?? 0);
+            if ($outstanding == 0) {
+                $sheet->getStyle("A{$row}:AE{$row}")->applyFromArray($greenBorderStyle);
+            } else {
+                $sheet->getStyle("A{$row}:AE{$row}")->applyFromArray($borderStyle);
+            }
+            $row++;
+        }
+
+        // Grand Total row
+        $sheet->setCellValue('A' . $row, 'Grand Total');
+        $sheet->getStyle("A{$row}:AE{$row}")->applyFromArray($bold16);
+
+        // Add SUM formulas for each column except the first
+        for ($col = 2; $col <= 31; $col++) {
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+            $sheet->setCellValue("{$colLetter}{$row}", "=SUM({$colLetter}4:{$colLetter}" . ($row - 1) . ")");
+        }
+        $sheet->getStyle("A{$row}:AE{$row}")->applyFromArray($borderStyle);
+
+        // Output
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
         header('Cache-Control: max-age=0');

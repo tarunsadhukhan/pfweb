@@ -344,10 +344,19 @@ scratch. This page gets rid of all links and provides the needed markup only.
             </a>
           </li>
           <li class="nav-item">
-            <a href="<?php echo base_url().'admin/reports/doff10report'; ?>" class="nav-link">
+            <a href="<?php echo base_url().'admin/esidetails/Esi_outstanding'; ?>" class="nav-link">
               <i class="nav-icon fas fa-th"></i>
               <p>
               ESI Outstanding   
+                <span class="right badge badge-danger">New</span>
+              </p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="<?php echo base_url().'admin/esidetails/InsuranceController'; ?>" class="nav-link">
+              <i class="nav-icon fas fa-th"></i>
+              <p>
+              ESI Doc Submission Report  
                 <span class="right badge badge-danger">New</span>
               </p>
             </a>
@@ -356,7 +365,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
         </ul>
           </li>
 
-//winding
 <li class="nav-item has-treeview">
             <a href="#" class="nav-link active">
               <i class="nav-icon fas fa-tachometer-alt"></i>

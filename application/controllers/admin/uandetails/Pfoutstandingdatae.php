@@ -68,7 +68,8 @@ class Pfoutstandingdatae extends CI_Controller {
 	//	var_dump($dataq);
 
 //		$this->load->view('admin/winding_doff/winding_doff_data',$data,$dataq);
-		$this->load->view('admin/uandetails/Pfoutstandingdatae', $data_to_pass);	
+//		$this->load->view('admin/uandetails/Pfoutstandingdatae', $data_to_pass);	
+		$this->load->view('admin/uandetails/Pfsummaryreport', $data_to_pass);	
 	}
 
     public function Pfoutstandingdatae() {
