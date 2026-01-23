@@ -37,9 +37,9 @@ public function get_ipno_name_by_ebno() {
         ]);
     } else {
         echo json_encode([
-            'success' => false,
+            'success' => true,
             'ipno' => 'NA',
-            'name' => 'NA'
+            'name' => 'NA '
         ]);
     }
 }
