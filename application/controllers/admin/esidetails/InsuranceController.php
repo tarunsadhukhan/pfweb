@@ -36,7 +36,11 @@ public function get_ipno_name_by_ebno() {
             'name' => $result['name']
         ]);
     } else {
-        echo json_encode(['success' => false]);
+        echo json_encode([
+            'success' => false,
+            'ipno' => 'NA',
+            'name' => 'NA'
+        ]);
     }
 }
     public function fetchRecord() {
