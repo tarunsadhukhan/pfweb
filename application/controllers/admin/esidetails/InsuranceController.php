@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 //use Fpdf\Fpdf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-require_once APPPATH . '../vendor/autoload.php';
+//require_once APPPATH . '../vendor/autoload.php';
 	
 require_once(APPPATH.'libraries/fpdf.php');  
 
@@ -77,8 +77,8 @@ public function exportpdfdata()
         $this->_print_joining_pass_letter($pdf, $upfromdate, $uptodate, $companyId, $ebno, $ipno, $name);
  
     header('Content-Type: application/pdf');
-    header('Content-Disposition: inline; filename="joining_pass.pdf"');
-    $pdf->Output('D', 'joining_pass.pdf');
+    header('Content-Disposition: inline; filename="Esi_Report.pdf"');
+    $pdf->Output('D', 'Esi_Report.pdf');
     exit;
 }
 
