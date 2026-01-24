@@ -79,10 +79,10 @@ public function exportpdfdata()
 
         $pdf->AddPage();
         $this->_print_joining_pass_letter($pdf, $upfromdate, $uptodate, $companyId, $ebno, $ipno, $name);
- 
+    $fl='Esi_Report_'.$ipno.'.pdf';
     header('Content-Type: application/pdf');
-    header('Content-Disposition: inline; filename="Esi_Report.pdf"');
-    $pdf->Output('D', 'Esi_Report.pdf');
+    header('Content-Disposition: inline; filename="'.$fl.'"');
+    $pdf->Output('D', $fl);
     exit;
 }
 
