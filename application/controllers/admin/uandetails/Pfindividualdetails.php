@@ -236,29 +236,45 @@ echo 'sql-'.$sql;
             $sheet->setTitle($uanno);
             $cmpn="company";
            
-            $cmpn="your company";
+            $cmpn="The Empire Jute Mills Co Ltd";
 //            $sheet->setCellValue('A1', 'For the Month of '.$sdate);
         //	$active_sheet->setCellValue('A2', "Reports for Dated : ");
             // Set company name
-            $companyName = "Your Company Name";
+            $companyName = "The Empire Jute Mills Co Ltd";
         
-            $sheet->setCellValue('a1', 'Month');
-            $sheet->setCellValue('b1', 'PF Deducted ');
-            $sheet->setCellValue('e1', 'PF Payment');
-            $sheet->setCellValue('h1', 'Outstanding');
+            $sheet->setCellValue('A1', $companyName);
+            $sheet->setCellValue('A2', 'PF Individual Details Report for UAN No: '.$uanno);
+            $sheet->setCellValue('A3', 'From Date: '.$sdate.' To Date: '.$edate);
+            
+            // Merge cells A to H for header rows and center align
+            $sheet->mergeCells('A1:H1');
+            $sheet->mergeCells('A2:H2');
+            $sheet->mergeCells('A3:H3');
+            
+            $sheet->getStyle('A1:H3')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('A1:H3')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);   
+
+
+            $sheet->setCellValue('a4', 'Month');
+            $sheet->setCellValue('b4', 'PF Deducted ');
+            $sheet->setCellValue('e4', 'PF Payment');
+            $sheet->setCellValue('h4', 'Outstanding');
+            $sheet->mergeCells('b4:d4');
+            $sheet->mergeCells('e4:g4');
  
-            $sheet->setCellValue('A2', 'Month End Date ');
-            $sheet->setCellValue('b2', 'EE Contribution');
-            $sheet->setCellValue('c2', 'ER Contribution');
-            $sheet->setCellValue('d2', 'Total Amount');
-            $sheet->setCellValue('e2', 'EE Contribution');
-            $sheet->setCellValue('f2', 'ER Contribution');
-            $sheet->setCellValue('g2', 'Total Amount');
-            $sheet->setCellValue('h2', 'Outstanding Amount');
+            
+            $sheet->setCellValue('A5', 'Month End Date ');
+            $sheet->setCellValue('b5', 'EE Contribution');
+            $sheet->setCellValue('c5', 'ER Contribution');
+            $sheet->setCellValue('d5', 'Total Amount');
+            $sheet->setCellValue('e5', 'EE Contribution');
+            $sheet->setCellValue('f5', 'ER Contribution');
+            $sheet->setCellValue('g5', 'Total Amount');
+            $sheet->setCellValue('h5', 'Outstanding Amount');
          
             $grgac1amt=$grgac10amt=$grgadmchgs=$grpac1amt=$grpac10amt=$grpadmchgs=$grout=0;       
             
-            $rowIndex = 3;
+            $rowIndex = 6;
             foreach ($records as $record) {
                 $columnIndex = 1;
                 $grgac1amt=$grgac1amt+$record->gac1amt;
@@ -337,6 +353,20 @@ echo 'sql-'.$sql;
         
         	$sheet->mergeCells('b1:d1');
             $sheet->mergeCells('e1:g1');
+            
+            // Define border style
+            $borderStyle = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+                    ]
+                ]
+            ];
+            
+            // Apply borders to all cells with data
+            $sheet->getStyle('A1:H'.$rowIndex)->applyFromArray($borderStyle);
+            
+            // Set auto width for columns
             $sheet->getColumnDimension('A')->setAutoSize(true);
             $sheet->getColumnDimension('B')->setAutoSize(true);
             $sheet->getColumnDimension('C')->setAutoSize(true);
@@ -345,8 +375,6 @@ echo 'sql-'.$sql;
             $sheet->getColumnDimension('F')->setAutoSize(true);
             $sheet->getColumnDimension('G')->setAutoSize(true);
             $sheet->getColumnDimension('H')->setAutoSize(true);
-            $sheet->getColumnDimension('I')->setAutoSize(true);
-            $sheet->getColumnDimension('J')->setAutoSize(true);
      
         //	$sheet->getStyle('A1')->getFont()->setSize(16)->setBold(true);
         $sheet->getStyle('a1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);

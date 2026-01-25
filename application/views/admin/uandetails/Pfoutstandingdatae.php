@@ -618,7 +618,9 @@ $("#showpfupdata").click(function(event){
 
               initDatedata();      
         function initDatedata() {
-            $('#spgdailyrecordTable').DataTable().destroy();
+            if ($.fn.DataTable.isDataTable('#spgdailyrecordTable')) {
+                $('#spgdailyrecordTable').DataTable().destroy();
+            }
              var companyId=$('#companyId').val();
              var companyId=$('#companyId').val();
              var upfromdate= $('#upfromdate').val();
@@ -638,9 +640,7 @@ $("#showpfupdata").click(function(event){
                     }
                   },
                   columnDefs: [
-                    { targets: [0], visible: true }, // Hide the first column (auto_id)
-                    { targets: [0], visible: true }, { targets: [0], visible: true },{
-                    targets: [1,2,3,4,5,6,7,8,9],
+                    { targets: [1,2,3,4,5,6,7,8,9],
                     render: function(data, type, row, meta) {
                         return '<div class="column-align-right">' + data + '</div>';
                     }

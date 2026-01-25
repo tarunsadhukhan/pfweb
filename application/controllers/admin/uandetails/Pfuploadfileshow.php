@@ -543,14 +543,16 @@ class Pfuploadfileshow extends CI_Controller {
         $sql = "select date_format(gen.month_end_date,'%d-%m-%Y') monthenddate,
 	gen.*,
 	upl.*,
-	pay.*,gen.epfcont_g -pay.epfcont_p epfcont_od,gen.epscont_g -pay.epscont_p epscont_od,gen.epfepscont_g -pay.epfepsdiff_p epfepsdiff_od,
+	pay.*,gen.epfcont_g -pay.epfcont_p epfcont_od,gen.epscont_g -pay.epscont_p epscont_od,gen.epfepsdiff_g -pay.epfepsdiff_p epfepsdiff_od,
 	gen.admchgs_g -pay.admchgs_p admchgs_od,
 	upl.epfcont_d -pay.epfcont_p epfcont_ou,upl.epscont_d -pay.epscont_p epscont_ou,upl.epfepsdiff_d  -pay.epfepsdiff_p epfepsdiff_ou,
 	upl.admchgs_d -pay.admchgs_p admchgs_ou,
-	gen.epfcont_g -upl.epfcont_d epfcont_pu,gen.epscont_g -upl.epscont_d epscont_pu,gen.epfepscont_g -upl.epfepsdiff_d epfepsdiff_pu,
+	gen.epfcont_g -upl.epfcont_d epfcont_pu,gen.epscont_g -upl.epscont_d epscont_pu,gen.epfepsdiff_g -upl.epfepsdiff_d epfepsdiff_pu,
 	gen.admchgs_g -upl.admchgs_d admchgs_pu
         from (
-                select tpg.month_end_date,sum(tpg.epf_contibution) epfcont_g,sum(tpg.eps_contribution) epscont_g,sum(tpg.epf_eps_diff_contribution) epfepscont_g,
+                select tpg.month_end_date,sum(tpg.epf_contibution) epfcont_g,
+                sum(tpg.eps_contribution) epscont_g,
+                sum(tpg.epf_eps_diff_contribution) epfepsdiff_g,
                 round(sum((tpg.epf_wages))*.01,0) admchgs_g,
                 sum(tpg.epf_contibution)+sum(tpg.eps_contribution)+sum(tpg.epf_eps_diff_contribution) +
                 round(sum((tpg.epf_wages))*.01,0) total_g
@@ -592,8 +594,8 @@ class Pfuploadfileshow extends CI_Controller {
 				) g
 				group by month_end_date
                 ) pay on gen.month_end_date =pay.month_end_date
-                order by gen.month_end_date";
-
+                order by gen.month_end_date desc";
+//echo $sql;
         $query = $this->db->query($sql);
         return $query->result();
     }
@@ -611,40 +613,111 @@ class Pfuploadfileshow extends CI_Controller {
 
         $data = [];
         foreach ($records as $record) {
-            $total_od = ($record->epfcont_od ?? 0) + ($record->epscont_od ?? 0) + ($record->epfepsdiff_od ?? 0) + ($record->admchgs_od ?? 0);
-            $total_ou = ($record->epfcont_ou ?? 0) + ($record->epscont_ou ?? 0) + ($record->epfepsdiff_ou ?? 0) + ($record->admchgs_ou ?? 0);
-            $total_pu = ($record->epfcont_pu ?? 0) + ($record->epscont_pu ?? 0) + ($record->epfepsdiff_pu ?? 0) + ($record->admchgs_pu ?? 0);
-            $data[] = [
+            $epfcont_g = $record->epfcont_g ?? 0;
+            $epscont_g = $record->epscont_g ?? 0;
+            $epfespsdiff_g = $record->epfepsdiff_g ?? 0;
+            $admchgs_g = $record->admchgs_g ?? 0;
+
+            $epfcont_d = $record->epfcont_d ?? 0;
+            $epscont_d = $record->epscont_d ?? 0;
+            $epfespsdiff_d = $record->epfepsdiff_d ?? 0;
+            $admchgs_d = $record->admchgs_d ?? 0;
+
+            $epfcont_p = $record->epfcont_p ?? 0;
+            $epscont_p = $record->epscont_p ?? 0;
+            $epfespsdiff_p = $record->epfepsdiff_p ?? 0;
+            $admchgs_p = $record->admchgs_p ?? 0;
+
+ 
+
+            if ( $epfcont_d<=0) {
+                $epfcont_d=$epfcont_g;
+                $admchgs_d=$record->admchgs_g;
+            }
+            if ($epfcont_d>($epscont_d+$epfespsdiff_d)) {
+               $epscont_d=round(($epfcont_d*8.33)/10,0) ;
+               $epfespsdiff_d=$epfcont_d-$epscont_d    ;
+            }
+
+            $epfcont_od=$epfcont_g - $epfcont_p;
+            $epscont_od=$epscont_g - $epscont_p;
+            $epfespsdiff_od=$epfespsdiff_g - $epfespsdiff_p;
+            $admchgs_od=$admchgs_g - $admchgs_p;
+
+
+            $epfcont_ou=$epfcont_d - $epfcont_p;
+            $epscont_ou=$epscont_d - $epscont_p;
+            $epfespsdiff_ou=$epfespsdiff_d - $epfespsdiff_p;
+            $admchgs_ou=$admchgs_d - $admchgs_p;
+
+            $epfcont_pu =$epfcont_g - $epfcont_d ;
+            $epscont_pu =$epscont_g - $epscont_d ;
+            $epfespsdiff_pu =$epfespsdiff_g - $epfespsdiff_d ;
+            $admchgs_pu =$admchgs_g - $admchgs_d ;
+
+            $total_g_adm = $epfcont_g + $epscont_g + $epfespsdiff_g + $admchgs_g;
+            $total_g = $epfcont_g + $epscont_g + $epfespsdiff_g ;
+  
+            $total_d_adm=$epfcont_d + $epscont_d + $epfespsdiff_d + $admchgs_d;
+            $total_d=$epfcont_d + $epscont_d + $epfespsdiff_d ;
+  
+            $total_p_adm= $epfcont_p + $epscont_p + $epfespsdiff_p + $admchgs_p;
+            $total_p= $epfcont_p + $epscont_p + $epfespsdiff_p;
+            
+            $total_od=$total_g-$total_p;    
+            $total_od_adm=$total_g_adm-$total_p_adm;
+
+            $total_ou=$total_d-$total_p;
+            $total_ou_adm=$total_d_adm-$total_p_adm;
+            
+            $total_pu=$total_g -$total_d;
+            $total_pu_adm=$total_g_adm -$total_d_adm;   
+
+
+ 
+            
+             $data[] = [
                 $record->monthenddate,
-                $record->epfcont_g,
-                $record->epscont_g,
-                $record->epfepscont_g,
-                $record->admchgs_g,
-                $record->total_g,
-                $record->epfcont_d ?? 0,
-                $record->epscont_d ?? 0,
-                $record->epfepsdiff_d ?? 0,
-                $record->admchgs_d ?? 0,
-                $record->total_d ?? 0,
-                $record->epfcont_p ?? 0,
-                $record->epscont_p ?? 0,
-                $record->epfepsdiff_p ?? 0,
-                $record->admchgs_p ?? 0,
-                $record->total_p ?? 0,
-                $record->epfcont_od ?? 0,
-                $record->epscont_od ?? 0,
-                $record->epfepsdiff_od ?? 0,
-                $record->admchgs_od ?? 0,
+                $epfcont_g,
+                $epscont_g,
+                $epfespsdiff_g,
+                $admchgs_g,
+                $total_g_adm,
+                $total_g,
+
+                $epfcont_d ,
+                $epscont_d ,
+                $epfespsdiff_d ,
+                $admchgs_d ,
+                $total_d_adm,
+                $total_d,
+
+                $epfcont_p ,
+                $epscont_p ,
+                $epfespsdiff_p,
+                $admchgs_p ,
+                $total_p_adm,
+                $total_p,
+
+                $epfcont_od ?? 0,
+                $epscont_od ?? 0,
+                $epfespsdiff_od ?? 0,
+                $admchgs_od ?? 0,
+                $total_od_adm,
                 $total_od,
-                $record->epfcont_ou ?? 0,
-                $record->epscont_ou ?? 0,
-                $record->epfepsdiff_ou ?? 0,
-                $record->admchgs_ou ?? 0,
+
+                $epfcont_ou,
+                $epscont_ou,
+                $epfespsdiff_ou,
+                $admchgs_ou,
+                $total_ou_adm,
                 $total_ou,
-                $record->epfcont_pu ?? 0,
-                $record->epscont_pu ?? 0,
-                $record->epfepsdiff_pu ?? 0,
-                $record->admchgs_pu ?? 0,
+
+                $epfcont_pu ,
+                $epscont_pu ,
+                $epfespsdiff_pu ,
+                $admchgs_pu ,
+                $total_p_adm,
                 $total_pu
             ];
         }
@@ -674,6 +747,15 @@ class Pfuploadfileshow extends CI_Controller {
             'font' => ['bold' => true, 'size' => 16],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
         ];
+        $bold12 = [
+            'font' => ['bold' => true, 'size' => 12],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+        ];
+        $bold10 = [
+            'font' => ['bold' => true, 'size' => 10],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+        ];
+
         $borderStyle = [
             'borders' => [
                 'allBorders' => [
@@ -691,79 +773,196 @@ class Pfuploadfileshow extends CI_Controller {
         ];
 
         // Header rows
-        $sheet->mergeCells('A1:AE1');
+        $sheet->mergeCells('A1:AK1');
         $sheet->setCellValue('A1', $company_name);
         $sheet->getStyle('A1')->applyFromArray($bold16);
+        $sheet->getStyle('A1:AK1')->applyFromArray($borderStyle);
 
-        $sheet->mergeCells('A2:AE2');
+
+        $sheet->mergeCells('A2:AK2');
         $sheet->setCellValue('A2', "PF Dues & Outstanding Report for the Period from $fromdate To $todate");
         $sheet->getStyle('A2')->applyFromArray($bold16);
+        $sheet->getStyle('A2:AK2')->applyFromArray($borderStyle);
 
-        // Table headers
-        $headers = ['Month End Date', 'EPF Cont G', 'EPS Cont G', 'EPF EPS Diff G', 'Adm Chgs G', 'Total G',
-            'EPF Cont D', 'EPS Cont D', 'EPF EPS Diff D', 'Adm Chgs D', 'Total D',
-            'EPF Cont P', 'EPS Cont P', 'EPF EPS Diff P', 'Adm Chgs P', 'Total P',
-            'EPF Cont OD', 'EPS Cont OD', 'EPF EPS Diff OD', 'Adm Chgs OD', 'Total OD',
-            'EPF Cont OU', 'EPS Cont OU', 'EPF EPS Diff OU', 'Adm Chgs OU', 'Total OU',
-            'EPF Cont PU', 'EPS Cont PU', 'EPF EPS Diff PU', 'Adm Chgs PU', 'Total PU'];
-        $sheet->fromArray($headers, NULL, 'A3');
-        $sheet->getStyle('A3:AE3')->applyFromArray($bold16);
+        $rng='b3:g3';
+        $txt='PF Deducted';
+        $sheet->mergeCells($rng);
+        $sheet->setCellValue('b3', $txt);
+        
+        $rng='h3:m3';
+        $txt='PF Uploaded';
+        $sheet->mergeCells($rng);
+        $sheet->setCellValue('h3', $txt);
+
+        $rng='n3:s3';
+        $txt='PF Payment';
+        $sheet->mergeCells($rng);
+        $sheet->setCellValue('n3', $txt);
+
+        $rng='t3:y3';
+        $txt='PF Outstanding As per Deduction';
+        $sheet->mergeCells($rng);
+        $sheet->setCellValue('t3', $txt);
+
+        $rng='z3:ae3';
+        $txt='PF Outstanding As per Upload';
+        $sheet->mergeCells($rng);
+        $sheet->setCellValue('z3', $txt);
+
+        $rng='af3:ak3';
+        $txt='Upload Pending';
+        $sheet->mergeCells($rng);
+        $sheet->setCellValue('af3', $txt);
+
+        $rng='a3:ak3';
+        $sheet->getStyle($rng)->applyFromArray($bold16);
+        $sheet->getStyle($rng)->applyFromArray($borderStyle);
+        // Wrap text for headers
+        $sheet->getStyle('A1:AK4')->getAlignment()->setWrapText(true);
+
+
+        // Table headers - matching pfsummaryTable exactly
+        $headers = ['Month End Date', 'EPF Cont G', 'EPS Cont G', 'EPF EPS Diff G', 'Adm Chgs G', 'Total G_Adm', 'Total G',
+            'EPF Cont D', 'EPS Cont D', 'EPF EPS Diff D', 'Adm Chgs D', 'Total D_Adm', 'Total D',
+            'EPF Cont P', 'EPS Cont P', 'EPF EPS Diff P', 'Adm Chgs P', 'Total P_Adm', 'Total P',
+            'EPF Cont OD', 'EPS Cont OD', 'EPF EPS Diff OD', 'Adm Chgs OD', 'Total OD_Adm', 'Total OD',
+            'EPF Cont OU', 'EPS Cont OU', 'EPF EPS Diff OU', 'Adm Chgs OU', 'Total OU_adm', 'Total OU',
+            'EPF Cont PU', 'EPS Cont PU', 'EPF EPS Diff PU', 'Adm Chgs PU', 'Total PU_Adm', 'Total PU'];
+        $sheet->fromArray($headers, NULL, 'A4');
+        $sheet->getStyle('A4:AK4')->applyFromArray($bold12);
+        $sheet->getStyle('A4:AK4')->applyFromArray($borderStyle);
 
         // Data rows
-        $row = 4;
+        $row = 5;
         foreach ($records as $record) {
+                        $epfcont_g = $record->epfcont_g ?? 0;
+            $epscont_g = $record->epscont_g ?? 0;
+            $epfespsdiff_g = $record->epfepsdiff_g ?? 0;
+            $admchgs_g = $record->admchgs_g ?? 0;
+
+            $epfcont_d = $record->epfcont_d ?? 0;
+            $epscont_d = $record->epscont_d ?? 0;
+            $epfespsdiff_d = $record->epfepsdiff_d ?? 0;
+            $admchgs_d = $record->admchgs_d ?? 0;
+
+            $epfcont_p = $record->epfcont_p ?? 0;
+            $epscont_p = $record->epscont_p ?? 0;
+            $epfespsdiff_p = $record->epfepsdiff_p ?? 0;
+            $admchgs_p = $record->admchgs_p ?? 0;
+
+ 
+
+            if ( $epfcont_d<=0) {
+                $epfcont_d=$epfcont_g;
+                $admchgs_d=$record->admchgs_g;
+            }
+            if ($epfcont_d>($epscont_d+$epfespsdiff_d)) {
+               $epscont_d=round(($epfcont_d*8.33)/10,0) ;
+               $epfespsdiff_d=$epfcont_d-$epscont_d    ;
+            }
+
+            $epfcont_od=$epfcont_g - $epfcont_p;
+            $epscont_od=$epscont_g - $epscont_p;
+            $epfespsdiff_od=$epfespsdiff_g - $epfespsdiff_p;
+            $admchgs_od=$admchgs_g - $admchgs_p;
+
+
+            $epfcont_ou=$epfcont_d - $epfcont_p;
+            $epscont_ou=$epscont_d - $epscont_p;
+            $epfespsdiff_ou=$epfespsdiff_d - $epfespsdiff_p;
+            $admchgs_ou=$admchgs_d - $admchgs_p;
+
+            $epfcont_pu =$epfcont_g - $epfcont_d ;
+            $epscont_pu =$epscont_g - $epscont_d ;
+            $epfespsdiff_pu =$epfespsdiff_g - $epfespsdiff_d ;
+            $admchgs_pu =$admchgs_g - $admchgs_d ;
+
+            $total_g_adm = $epfcont_g + $epscont_g + $epfespsdiff_g + $admchgs_g;
+            $total_g = $epfcont_g + $epscont_g + $epfespsdiff_g ;
+  
+            $total_d_adm=$epfcont_d + $epscont_d + $epfespsdiff_d + $admchgs_d;
+            $total_d=$epfcont_d + $epscont_d + $epfespsdiff_d ;
+  
+            $total_p_adm= $epfcont_p + $epscont_p + $epfespsdiff_p + $admchgs_p;
+            $total_p= $epfcont_p + $epscont_p + $epfespsdiff_p;
+            
+            $total_od=$total_g-$total_p;    
+            $total_od_adm=$total_g_adm-$total_p_adm;
+
+            $total_ou=$total_d-$total_p;
+            $total_ou_adm=$total_d_adm-$total_p_adm;
+            
+            $total_pu=$total_g -$total_d;
+            $total_pu_adm=$total_g_adm -$total_d_adm;   
+
+
+
             $sheet->setCellValue('A' . $row, $record->monthenddate);
-            $sheet->setCellValue('B' . $row, $record->epfcont_g);
-            $sheet->setCellValue('C' . $row, $record->epscont_g);
-            $sheet->setCellValue('D' . $row, $record->epfepscont_g);
-            $sheet->setCellValue('E' . $row, $record->admchgs_g);
-            $sheet->setCellValue('F' . $row, $record->total_g);
-            $sheet->setCellValue('G' . $row, $record->epfcont_d ?? 0);
-            $sheet->setCellValue('H' . $row, $record->epscont_d ?? 0);
-            $sheet->setCellValue('I' . $row, $record->epfepsdiff_d ?? 0);
-            $sheet->setCellValue('J' . $row, $record->admchgs_d ?? 0);
-            $sheet->setCellValue('K' . $row, $record->total_d ?? 0);
-            $sheet->setCellValue('L' . $row, $record->epfcont_p ?? 0);
-            $sheet->setCellValue('M' . $row, $record->epscont_p ?? 0);
-            $sheet->setCellValue('N' . $row, $record->epfepsdiff_p ?? 0);
-            $sheet->setCellValue('O' . $row, $record->admchgs_p ?? 0);
-            $sheet->setCellValue('P' . $row, $record->total_p ?? 0);
-            $sheet->setCellValue('Q' . $row, $record->epfcont_od ?? 0);
-            $sheet->setCellValue('R' . $row, $record->epscont_od ?? 0);
-            $sheet->setCellValue('S' . $row, $record->epfepsdiff_od ?? 0);
-            $sheet->setCellValue('T' . $row, $record->admchgs_od ?? 0);
-            $sheet->setCellValue('U' . $row, $record->total_od ?? 0);
-            $sheet->setCellValue('V' . $row, $record->epfcont_ou ?? 0);
-            $sheet->setCellValue('W' . $row, $record->epscont_ou ?? 0);
-            $sheet->setCellValue('X' . $row, $record->epfepsdiff_ou ?? 0);
-            $sheet->setCellValue('Y' . $row, $record->admchgs_ou ?? 0);
-            $sheet->setCellValue('Z' . $row, $record->total_ou ?? 0);
-            $sheet->setCellValue('AA' . $row, $record->epfcont_pu ?? 0);
-            $sheet->setCellValue('AB' . $row, $record->epscont_pu ?? 0);
-            $sheet->setCellValue('AC' . $row, $record->epfepsdiff_pu ?? 0);
-            $sheet->setCellValue('AD' . $row, $record->admchgs_pu ?? 0);
-            $sheet->setCellValue('AE' . $row, $record->total_pu ?? 0);
+            $sheet->setCellValue('B' . $row, $epfcont_g);
+            $sheet->setCellValue('C' . $row, $epscont_g);
+            $sheet->setCellValue('D' . $row, $epfespsdiff_g);
+            $sheet->setCellValue('E' . $row, $admchgs_g);
+            $sheet->setCellValue('F' . $row, $total_g_adm);
+            $sheet->setCellValue('G' . $row, $total_g);
+            $sheet->setCellValue('H' . $row, $epfcont_d);
+            $sheet->setCellValue('I' . $row, $epscont_d);
+            $sheet->setCellValue('J' . $row, $epfespsdiff_d);
+            $sheet->setCellValue('K' . $row, $admchgs_d);
+            $sheet->setCellValue('L' . $row, $total_d_adm);
+            $sheet->setCellValue('M' . $row, $total_d);
+            $sheet->setCellValue('N' . $row, $epfcont_p);
+            $sheet->setCellValue('O' . $row, $epscont_p);
+            $sheet->setCellValue('P' . $row, $epfespsdiff_p);
+            $sheet->setCellValue('Q' . $row, $admchgs_p);
+            $sheet->setCellValue('R' . $row, $total_p_adm);
+            $sheet->setCellValue('S' . $row, $total_p);
+            $sheet->setCellValue('T' . $row, $epfcont_od);
+            $sheet->setCellValue('U' . $row, $epscont_od);
+            $sheet->setCellValue('V' . $row, $epfespsdiff_od);
+            $sheet->setCellValue('W' . $row, $admchgs_od);
+            $sheet->setCellValue('X' . $row, $total_od_adm);
+            $sheet->setCellValue('Y' . $row, $total_od);
+            $sheet->setCellValue('Z' . $row, $epfcont_ou);
+            $sheet->setCellValue('AA' . $row, $epscont_ou);
+            $sheet->setCellValue('AB' . $row, $epfespsdiff_ou);
+            $sheet->setCellValue('AC' . $row, $admchgs_ou);
+            $sheet->setCellValue('AD' . $row, $total_ou_adm);
+            $sheet->setCellValue('AE' . $row, $total_ou);
+            $sheet->setCellValue('AF' . $row, $epfcont_pu);
+            $sheet->setCellValue('AG' . $row, $epscont_pu);
+            $sheet->setCellValue('AH' . $row, $epfespsdiff_pu);
+            $sheet->setCellValue('AI' . $row, $admchgs_pu);
+            $sheet->setCellValue('AJ' . $row, $total_pu_adm);
+            $sheet->setCellValue('AK' . $row, $total_pu);
 
             // Check if all outstanding columns are zero
-            $outstanding = ($record->epfcont_od ?? 0) + ($record->epscont_od ?? 0) + ($record->epfepsdiff_od ?? 0) + ($record->admchgs_od ?? 0);
+            $outstanding = $epfcont_od + $epscont_od + $epfespsdiff_od + $admchgs_od;
             if ($outstanding == 0) {
-                $sheet->getStyle("A{$row}:AE{$row}")->applyFromArray($greenBorderStyle);
+                $sheet->getStyle("A{$row}:AK{$row}")->applyFromArray($greenBorderStyle);
             } else {
-                $sheet->getStyle("A{$row}:AE{$row}")->applyFromArray($borderStyle);
+                $sheet->getStyle("A{$row}:AK{$row}")->applyFromArray($borderStyle);
             }
             $row++;
         }
 
         // Grand Total row
         $sheet->setCellValue('A' . $row, 'Grand Total');
-        $sheet->getStyle("A{$row}:AE{$row}")->applyFromArray($bold16);
+        $sheet->getStyle("A{$row}:AK{$row}")->applyFromArray($bold10);
 
-        // Add SUM formulas for each column except the first
-        for ($col = 2; $col <= 31; $col++) {
+        // Add SUM formulas for numeric columns (skip column A which is the label)
+        for ($col = 2; $col <= 37; $col++) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
-            $sheet->setCellValue("{$colLetter}{$row}", "=SUM({$colLetter}4:{$colLetter}" . ($row - 1) . ")");
+            $sheet->setCellValue("{$colLetter}{$row}", "=SUM({$colLetter}5:{$colLetter}" . ($row - 1) . ")");
         }
-        $sheet->getStyle("A{$row}:AE{$row}")->applyFromArray($borderStyle);
+        $sheet->getStyle("A{$row}:AK{$row}")->applyFromArray($borderStyle);
+
+        // Apply borders to the entire used range
+        $sheet->getStyle("A1:AK{$row}")->applyFromArray($borderStyle);
+
+        // Set auto width for all columns
+        foreach (range('A', 'AK') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
 
         // Output
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);

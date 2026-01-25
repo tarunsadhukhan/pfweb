@@ -211,17 +211,17 @@ table.dataTable {
         <thead>
             <tr>
                 <th colspan="1" style="text-align: center; border: 1px solid #C0C0C0;">Month</th>
-<th colspan="5"
+<th colspan="6"
     style="text-align:center;
            border:1px solid #C9C4C3;
            background-color:#E8F0FE;">
     PF Deducted
 </th>
-                <th colspan="5" style="text-align: center; border: 1px solid #C0C0C0;">PF Uploaded</th>
-                <th colspan="5" style="text-align: center; border: 1px solid #C0C0C0;">PF Payment</th>
-                <th colspan="5" style="text-align: center; border: 1px solid #C0C0C0;">PF Outstanding As per Deduction</th>
-                <th colspan="5" style="text-align: center; border: 1px solid #C0C0C0;">PF Outstanding As per Upload</th>
-                <th colspan="5" style="text-align: center; border: 1px solid #C0C0C0;">Upload Pending </th>
+                <th colspan="6" style="text-align: center; border: 1px solid #C0C0C0;">PF Uploaded</th>
+                <th colspan="6" style="text-align: center; border: 1px solid #C0C0C0;">PF Payment</th>
+                <th colspan="6" style="text-align: center; border: 1px solid #C0C0C0;">PF Outstanding As per Deduction</th>
+                <th colspan="6" style="text-align: center; border: 1px solid #C0C0C0;">PF Outstanding As per Upload</th>
+                <th colspan="6" style="text-align: center; border: 1px solid #C0C0C0;">Upload Pending </th>
             </tr>
             <tr class="search-row">
                 <th>Month End Date</th>
@@ -229,31 +229,37 @@ table.dataTable {
                 <th>EPS Cont G</th>
                 <th>EPF EPS Diff G</th>
                 <th>Adm Chgs G</th>
+                <th>Total G_Adm</th>
                 <th>Total G</th>
                 <th>EPF Cont D</th>
                 <th>EPS Cont D</th>
                 <th>EPF EPS Diff D</th>
                 <th>Adm Chgs D</th>
+                <th>Total D_Adm</th>
                 <th>Total D</th>
                 <th>EPF Cont P</th>
                 <th>EPS Cont P</th>
                 <th>EPF EPS Diff P</th>
                 <th>Adm Chgs P</th>
+                <th>Total P_Adm</th>
                 <th>Total P</th>
                 <th>EPF Cont OD</th>
                 <th>EPS Cont OD</th>
                 <th>EPF EPS Diff OD</th>
                 <th>Adm Chgs OD</th>
+                <th>Total OD_Adm</th>
                 <th>Total OD</th>
                 <th>EPF Cont OU</th>
                 <th>EPS Cont OU</th>
                 <th>EPF EPS Diff OU</th>
                 <th>Adm Chgs OU</th>
+                <th>Total OU_adm</th>
                 <th>Total OU</th>
                 <th>EPF Cont PU</th>
                 <th>EPS Cont PU</th>
                 <th>EPF EPS Diff PU</th>
                 <th>Adm Chgs PU</th>
+                <th>Total PU_Adm</th>
                 <th>Total PU</th>
             </tr>
             <tr>
@@ -262,31 +268,37 @@ table.dataTable {
                 <th><input type="text" placeholder="Search EPS Cont G" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF EPS Diff G" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Adm Chgs G" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Total G_Adm" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Total G" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF Cont D" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPS Cont D" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF EPS Diff D" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Adm Chgs D" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Total D_Adm" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Total D" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF Cont P" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPS Cont P" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF EPS Diff P" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Adm Chgs P" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Total P_Adm" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Total P" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF Cont OD" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPS Cont OD" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF EPS Diff OD" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Adm Chgs OD" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Total OD_Adm" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Total OD" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF Cont OU" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPS Cont OU" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF EPS Diff OU" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Adm Chgs OU" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Total OU_Adm" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Total OU" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF Cont PU" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPS Cont PU" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search EPF EPS Diff PU" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Adm Chgs PU" style="width:100%" /></th>
+                <th><input type="text" placeholder="Search Total PU_Adm" style="width:100%" /></th>
                 <th><input type="text" placeholder="Search Total PU" style="width:100%" /></th>
             </tr>
         </thead>
@@ -337,7 +349,7 @@ $(document).ready(function() {
         "scrollCollapse": true,
         "paging": true,
         "searching": true,
-        "ordering": true,
+        "ordering": false,
         "info": true,
         "autoWidth": false,
         "responsive": false,

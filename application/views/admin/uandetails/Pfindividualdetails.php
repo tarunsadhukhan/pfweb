@@ -206,7 +206,7 @@ table.dataTable thead th,
             <table id="spgdailyrecordTable">
         <thead>
             <tr>
-            <th>Month End Date</th>
+                <th>Month End Date</th>
                 <th>EE Contribution</th>
                 <th>ER Contribution</th>
                 <th>Total Amount</th>
@@ -214,8 +214,6 @@ table.dataTable thead th,
                 <th>ER Contribution</th>
                  <th>Total Amount</th>
                  <th>Outstanding </th>
-
-
             </tr>
         </thead>
         <tbody>

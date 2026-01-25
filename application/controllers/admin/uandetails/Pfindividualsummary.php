@@ -111,7 +111,8 @@ select tpg.uan_id,tum.uan_no,tum.name_as_per_pf_online,epf_contibution gac1amt,e
          where tphud.trrn_status in (3) and tphud.is_active =1 ) g group by pf_gen_id
           ) tplud  on tpg.pf_gen_id =tplud.pf_gen_id 
          left join EMPMILL12.tbl_uan_master tum on tpg.uan_id =tum.uan_id 
-         where tpg.is_active=1   and month_end_date between '".$upfromdate."' and '".$uptodate."'";    
+         where tpg.is_active=1   
+         and tpg.company_id=".$compid." and month_end_date between '".$upfromdate."' and '".$uptodate."'";    
          if ($uanid>0) {
             $sql = $sql . " and tpg.uan_id=" . $uanid ;
          }
@@ -242,7 +243,8 @@ select tpg.uan_id,tum.uan_no,tum.name_as_per_pf_online,epf_contibution gac1amt,e
          where tphud.trrn_status in (3) and tphud.is_active =1 ) g group by pf_gen_id
           ) tplud  on tpg.pf_gen_id =tplud.pf_gen_id 
          left join EMPMILL12.tbl_uan_master tum on tpg.uan_id =tum.uan_id 
-         where tpg.is_active=1   and month_end_date between '".$upfromdate."' and '".$uptodate."'";    
+         where tpg.is_active=1   and  company_id=".$compid." and
+         month_end_date between '".$upfromdate."' and '".$uptodate."'";    
          if ($uanid>0) {
             $sql = $sql . " and tpg.uan_id=" . $uanid ;
          }
