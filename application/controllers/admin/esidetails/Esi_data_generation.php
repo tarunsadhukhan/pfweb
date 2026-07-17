@@ -311,128 +311,130 @@ class Esi_data_generation extends CI_Controller {
         $entryMode='M';
 		$company_id = $this->session->userdata('company_id');
         
-        $sql="	insert into EMPMILL12.tbl_esi_data_geneated_file (month_end_date,company_id,esi_master_id,esi_gross,
-        esi_days,esi_amount,reason_code,exit_date ) 
-        select '$pfgendate' month_end_date,$companyId company_id , esi_master_id ,esi_gross ,
-        case when esi_days>$esidays then $esidays else esi_days end esi_days  ,esi_amount,
-        reason_code,exit_date from (
-        select tem.esi_master_id,tem.ip_no,tem.ip_name,ifnull(mesi.esi_days,0) esi_days,
-        ifnull(mesi.esi_gross,0) esi_gross,esi_amount,
-        case
-			when is_active=1 and ifnull(mesi.esi_gross, 0)= 0
-			 then 11
-			when is_active=1 and ifnull(mesi.esi_gross, 0)>0 then 0 
-			when is_active=0 and exit_reason>0 then exit_reason
-		end reason_code ,
-        case when is_active=0 then tem.exit_date
-        else null end exit_date,is_active 
-        from EMPMILL12.tbl_esi_master tem 
-        left join (
-                    select EMPLOYEEID,esi_no,  		    
-             max( case when esirem='esic' then amount else 0 end ) AS esi_amount,
-          max( case when esirem='esicgross' then amount else 0 end ) AS esi_gross,
-            max( case when esirem='wrkhrs' then ceiling(amount/8) else 0 end ) AS esi_days
-           from (
-            select EMPLOYEEID ,esirem,sum(AMOUNT) AMOUNT from 
-            (
-              SELECT
-            COMPONENT_ID,
-            tpc.NAME,
-            k.EMPLOYEEID ,
-            case when k.COMPONENT_ID =19 then 'esic' 
-            when k.COMPONENT_ID =149 then 'esicgross'
-            when k.COMPONENT_ID =178 then 'wrkhrs'
-            when k.COMPONENT_ID =179 then 'wrkhrs'
-            when k.COMPONENT_ID =180 then 'wrkhrs'
-            when k.COMPONENT_ID =183 then 'wrkhrs' end esirem,
-            case when k.COMPONENT_ID =183 then AMOUNT*8 
-            ELSE AMOUNT end  AMOUNT 
-            FROM
-            tbl_pay_employee_payroll k
-        JOIN vowsls.tbl_pay_employee_payscheme tpep ON 	tpep.EMPLOYEEID = k.EMPLOYEEID
-        left join tbl_pay_period tpp on tpp.ID=k.PAYPERIOD_ID
-        left join	tbl_pay_components tpc on tpc.ID=k.COMPONENT_ID
-        where month(tpp.FROM_DATE)=$esimonth and year(tpp.FROM_DATE )=$esiyear
-        and tpp.PAYSCHEME_ID in (125) and tpep.STATUS=1 
-        and tpp.STATUS =3  and COMPONENT_ID in (19,149,180,179,178,183)
-           union all
-              SELECT
-            COMPONENT_ID,
-            tpc.NAME,
-            k.EMPLOYEEID ,
-            case when k.COMPONENT_ID =19 then 'esic' 
-            when k.COMPONENT_ID =149 then 'esicgross'
-            when k.COMPONENT_ID =178 then 'wrkhrs'
-            when k.COMPONENT_ID =179 then 'wrkhrs'
-            when k.COMPONENT_ID =180 then 'wrkhrs'
-            when k.COMPONENT_ID =183 then 'wrkhrs' end esirem,
-            case when k.COMPONENT_ID =183 then AMOUNT*8 
-            ELSE AMOUNT end  AMOUNT 
-            FROM
-            tbl_pay_employee_payroll k
-        JOIN vowsls.tbl_pay_employee_payscheme tpep ON 	tpep.EMPLOYEEID = k.EMPLOYEEID
-        left join tbl_pay_period tpp on tpp.ID=k.PAYPERIOD_ID
-        left join	tbl_pay_components tpc on tpc.ID=k.COMPONENT_ID
-        where month(tpp.FROM_DATE)=$esimonth and year(tpp.FROM_DATE )=$esiyear
-        and tpp.PAYSCHEME_ID in (151) and tpep.STATUS=1 
-        and tpp.STATUS =3  and COMPONENT_ID in (19,149,180,179,178,183)
-        union all
-        SELECT
-            COMPONENT_ID,
-            tpc.NAME,
-            k.EMPLOYEEID ,
-            case when k.COMPONENT_ID =19 then 'esic' 
-            when k.COMPONENT_ID =224 then 'esicgross'
-            when k.COMPONENT_ID =178  then 'wrkhrs'
-            when k.COMPONENT_ID =179 then 'wrkhrs'
-            when k.COMPONENT_ID =102 then 'wrkhrs'
-            end esirem,
-                 AMOUNT 
-            FROM
-            tbl_pay_employee_payroll k
-        JOIN vowsls.tbl_pay_employee_payscheme tpep ON 	tpep.EMPLOYEEID = k.EMPLOYEEID
-        left join tbl_pay_period tpp on tpp.ID=k.PAYPERIOD_ID
-        left join	tbl_pay_components tpc on tpc.ID=k.COMPONENT_ID
-        where month(tpp.FROM_DATE)=$esimonth and year(tpp.FROM_DATE )=$esiyear
-        and tpp.PAYSCHEME_ID in (161) and tpep.STATUS=1 
-        and tpp.STATUS =3  and COMPONENT_ID in (19,224,102,178,179)
-        union all
-           SELECT
-            COMPONENT_ID,
-            tpc.NAME,
-            k.EMPLOYEEID ,
-            case when k.COMPONENT_ID =19 then 'esic' 
-            when k.COMPONENT_ID =66 then 'esicgross'
-            when k.COMPONENT_ID =6  then 'wrkhrs'
-            when k.COMPONENT_ID =179 then 'wrkhrs'
-            when k.COMPONENT_ID =102 then 'wrkhrs'
-            end esirem,
-            case when k.COMPONENT_ID =6 then AMOUNT*8 
-            ELSE AMOUNT end  AMOUNT 
-            FROM
-            tbl_pay_employee_payroll k
-        JOIN vowsls.tbl_pay_employee_payscheme tpep ON 	tpep.EMPLOYEEID = k.EMPLOYEEID
-        left join tbl_pay_period tpp on tpp.ID=k.PAYPERIOD_ID
-        left join tbl_pay_components tpc on tpc.ID=k.COMPONENT_ID
-        where month(tpp.FROM_DATE)=$esimonth and year(tpp.FROM_DATE )=$esiyear
-        and tpp.PAYSCHEME_ID in (102) and tpep.STATUS=1 
-        and tpp.STATUS =3  and COMPONENT_ID in (19,66,6)
-        ) g group by EMPLOYEEID ,esirem
-        ) h left join (select * from tbl_hrms_ed_esi thee where is_active=1) thee on h.EMPLOYEEID=thee.eb_id
-        group by EMPLOYEEID,esi_no
-        ) mesi on mesi.esi_no=tem.ip_no
-        where ( tem.is_active =1 ) or ( MONTH(tem.exit_date)=$esimonth and year(tem.exit_date)=$esiyear)
-        ) v 
+        if ($companyId==2) {
+                        $sql="	insert into EMPMILL12.tbl_esi_data_geneated_file (month_end_date,company_id,esi_master_id,esi_gross,
+                        esi_days,esi_amount,reason_code,exit_date ) 
+                        select '$pfgendate' month_end_date,$companyId company_id , esi_master_id ,esi_gross ,
+                        case when esi_days>$esidays then $esidays else esi_days end esi_days  ,esi_amount,
+                        reason_code,exit_date from (
+                        select tem.esi_master_id,tem.ip_no,tem.ip_name,ifnull(mesi.esi_days,0) esi_days,
+                        ifnull(mesi.esi_gross,0) esi_gross,esi_amount,
+                        case
+                            when is_active=1 and ifnull(mesi.esi_gross, 0)= 0
+                            then 11
+                            when is_active=1 and ifnull(mesi.esi_gross, 0)>0 then 0 
+                            when is_active=0 and exit_reason>0 then exit_reason
+                        end reason_code ,
+                        case when is_active=0 then tem.exit_date
+                        else null end exit_date,is_active 
+                        from EMPMILL12.tbl_esi_master tem 
+                        left join (
+                                    select EMPLOYEEID,esi_no,  		    
+                            max( case when esirem='esic' then amount else 0 end ) AS esi_amount,
+                        max( case when esirem='esicgross' then amount else 0 end ) AS esi_gross,
+                            max( case when esirem='wrkhrs' then ceiling(amount/8) else 0 end ) AS esi_days
+                        from (
+                            select EMPLOYEEID ,esirem,sum(AMOUNT) AMOUNT from 
+                            (
+                            SELECT
+                            COMPONENT_ID,
+                            tpc.NAME,
+                            k.EMPLOYEEID ,
+                            case when k.COMPONENT_ID =19 then 'esic' 
+                            when k.COMPONENT_ID =149 then 'esicgross'
+                            when k.COMPONENT_ID =178 then 'wrkhrs'
+                            when k.COMPONENT_ID =179 then 'wrkhrs'
+                            when k.COMPONENT_ID =180 then 'wrkhrs'
+                            when k.COMPONENT_ID =183 then 'wrkhrs' end esirem,
+                            case when k.COMPONENT_ID =183 then AMOUNT*8 
+                            ELSE AMOUNT end  AMOUNT 
+                            FROM
+                            tbl_pay_employee_payroll k
+                        JOIN vowsls.tbl_pay_employee_payscheme tpep ON 	tpep.EMPLOYEEID = k.EMPLOYEEID
+                        left join tbl_pay_period tpp on tpp.ID=k.PAYPERIOD_ID
+                        left join	tbl_pay_components tpc on tpc.ID=k.COMPONENT_ID
+                        where month(tpp.FROM_DATE)=$esimonth and year(tpp.FROM_DATE )=$esiyear
+                        and tpp.PAYSCHEME_ID in (125) and tpep.STATUS=1 
+                        and tpp.STATUS =3  and COMPONENT_ID in (19,149,180,179,178,183)
+                        union all
+                            SELECT
+                            COMPONENT_ID,
+                            tpc.NAME,
+                            k.EMPLOYEEID ,
+                            case when k.COMPONENT_ID =19 then 'esic' 
+                            when k.COMPONENT_ID =149 then 'esicgross'
+                            when k.COMPONENT_ID =178 then 'wrkhrs'
+                            when k.COMPONENT_ID =179 then 'wrkhrs'
+                            when k.COMPONENT_ID =180 then 'wrkhrs'
+                            when k.COMPONENT_ID =183 then 'wrkhrs' end esirem,
+                            case when k.COMPONENT_ID =183 then AMOUNT*8 
+                            ELSE AMOUNT end  AMOUNT 
+                            FROM
+                            tbl_pay_employee_payroll k
+                        JOIN vowsls.tbl_pay_employee_payscheme tpep ON 	tpep.EMPLOYEEID = k.EMPLOYEEID
+                        left join tbl_pay_period tpp on tpp.ID=k.PAYPERIOD_ID
+                        left join	tbl_pay_components tpc on tpc.ID=k.COMPONENT_ID
+                        where month(tpp.FROM_DATE)=$esimonth and year(tpp.FROM_DATE )=$esiyear
+                        and tpp.PAYSCHEME_ID in (151) and tpep.STATUS=1 
+                        and tpp.STATUS =3  and COMPONENT_ID in (19,149,180,179,178,183)
+                        union all
+                        SELECT
+                            COMPONENT_ID,
+                            tpc.NAME,
+                            k.EMPLOYEEID ,
+                            case when k.COMPONENT_ID =19 then 'esic' 
+                            when k.COMPONENT_ID =224 then 'esicgross'
+                            when k.COMPONENT_ID =178  then 'wrkhrs'
+                            when k.COMPONENT_ID =179 then 'wrkhrs'
+                            when k.COMPONENT_ID =102 then 'wrkhrs'
+                            end esirem,
+                                AMOUNT 
+                            FROM
+                            tbl_pay_employee_payroll k
+                        JOIN vowsls.tbl_pay_employee_payscheme tpep ON 	tpep.EMPLOYEEID = k.EMPLOYEEID
+                        left join tbl_pay_period tpp on tpp.ID=k.PAYPERIOD_ID
+                        left join	tbl_pay_components tpc on tpc.ID=k.COMPONENT_ID
+                        where month(tpp.FROM_DATE)=$esimonth and year(tpp.FROM_DATE )=$esiyear
+                        and tpp.PAYSCHEME_ID in (161) and tpep.STATUS=1 
+                        and tpp.STATUS =3  and COMPONENT_ID in (19,224,102,178,179)
+                        union all
+                        SELECT
+                            COMPONENT_ID,
+                            tpc.NAME,
+                            k.EMPLOYEEID ,
+                            case when k.COMPONENT_ID =19 then 'esic' 
+                            when k.COMPONENT_ID =66 then 'esicgross'
+                            when k.COMPONENT_ID =6  then 'wrkhrs'
+                            when k.COMPONENT_ID =179 then 'wrkhrs'
+                            when k.COMPONENT_ID =102 then 'wrkhrs'
+                            end esirem,
+                            case when k.COMPONENT_ID =6 then AMOUNT*8 
+                            ELSE AMOUNT end  AMOUNT 
+                            FROM
+                            tbl_pay_employee_payroll k
+                        JOIN vowsls.tbl_pay_employee_payscheme tpep ON 	tpep.EMPLOYEEID = k.EMPLOYEEID
+                        left join tbl_pay_period tpp on tpp.ID=k.PAYPERIOD_ID
+                        left join tbl_pay_components tpc on tpc.ID=k.COMPONENT_ID
+                        where month(tpp.FROM_DATE)=$esimonth and year(tpp.FROM_DATE )=$esiyear
+                        and tpp.PAYSCHEME_ID in (102) and tpep.STATUS=1 
+                        and tpp.STATUS =3  and COMPONENT_ID in (19,66,6)
+                        ) g group by EMPLOYEEID ,esirem
+                        ) h left join (select * from tbl_hrms_ed_esi thee where is_active=1) thee on h.EMPLOYEEID=thee.eb_id
+                        group by EMPLOYEEID,esi_no
+                        ) mesi on mesi.esi_no=tem.ip_no
+                        where ( tem.is_active =1 ) or ( MONTH(tem.exit_date)=$esimonth and year(tem.exit_date)=$esiyear)
+                        ) v 
 
 
-  
-   ";      
+                
+                ";      
+        }
 
+        
 /*           $sql="update  EMPMILL12.tbl_esi_data_geneated_file set is_active=0 where month_end_date='$pfgendate' 
           and company_id=$companyId";
           $this->db->query($sql);
  */            
-
 
    $sql="	insert into EMPMILL12.tbl_esi_data_geneated_file (month_end_date,company_id,esi_master_id,esi_gross,
    esi_days,esi_amount,reason_code,exit_date ) select '$pfgendate' month_end_date,$companyId company_id , esi_master_id ,esi_gross ,
@@ -492,6 +494,7 @@ where 		(tem.is_active=1 or  (MONTH(tem.exit_date)= $esimonth
 and year(tem.exit_date)= $esiyear))
     and tem.company_id =$companyId
 ) g";
+ 
 
  //       echo $sql;
 
@@ -750,12 +753,12 @@ $compid = $this->input->get('companyId');
 
 $sql="select
 	v.*,
-	'' PAYSCHEME_ID
+	tpep.PAY_SCHEME_ID  PAYSCHEME_ID
 from
 	(
 	select
 		1 rem,
-		'2025-11-30' month_end_date ,
+		'$date' month_end_date ,
 		esi_data_gen_file_id,
 		ip_no,
 		ip_name,
@@ -768,11 +771,17 @@ from
 		EMPMILL12.tbl_esi_data_geneated_file tedgf
 	join EMPMILL12.tbl_esi_master tem on
 		tem.esi_master_id = tedgf.esi_master_id
-	where
+		where
 		tedgf.month_end_date = '$date'
 		and tedgf.is_active = 1
 		and tem.company_id = $compid
-) v";
+) v
+	left join vowsls.tbl_hrms_ed_esi thee on thee.esi_no =ip_no and thee.is_active =1
+	left join vowsls.tbl_hrms_ed_personal_details thepd on thee.eb_id=thepd.eb_id and thepd.is_active =1   
+	left join vowsls.tbl_hrms_ed_official_details theod on thepd.eb_id=theod.eb_id and theod.is_active =1   
+	left join vowsls.tbl_pay_employee_payscheme tpep on tpep.EMPLOYEEID =thee.eb_id and tpep.STATUS =1 
+	where thepd.company_id =$compid
+";
 
 /*  union all
  select 2 rem,'$date' month_end_date,' ' esi_data_gen_file_id,'Grand Total ' ip_no,' ' ip_name,0 esi_days ,

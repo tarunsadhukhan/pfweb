@@ -378,6 +378,206 @@ class Uanmaster extends CI_Controller {
         echo json_encode($response);
     
     }
+
+    public function updateUanExitStatus() {
+        $companyId = $this->input->post('companyId');
+        
+        if (!isset($_FILES['excelFile'])) {
+            $response = array(
+                'success' => false,
+                'message' => 'No file uploaded'
+            );
+            echo json_encode($response);
+            return;
+        }
+
+        $file = $_FILES['excelFile'];
+        $file_path = $file['tmp_name'];
+
+        try {
+            // Load the Excel file
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file_path);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+
+            if (empty($rows)) {
+                $response = array(
+                    'success' => false,
+                    'message' => 'Excel file is empty'
+                );
+                echo json_encode($response);
+                return;
+            }
+
+            // Find the UANNO column
+            $headers = $rows[0];
+            $uannoColumnIndex = -1;
+            $doepfColumnIndex = -1;
+            
+            foreach ($headers as $index => $header) {
+                if (strtoupper(trim($header)) === 'UANNO') {
+                    $uannoColumnIndex = $index;
+                }
+                if (strtoupper(trim($header)) === 'DOEPF') {
+                    $doepfColumnIndex = $index;
+                }
+            }
+
+            if ($uannoColumnIndex === -1) {
+                $response = array(
+                    'success' => false,
+                    'message' => 'UANNO column not found in Excel file'
+                );
+                echo json_encode($response);
+                return;
+            }
+
+            if ($doepfColumnIndex === -1) {
+                $response = array(
+                    'success' => false,
+                    'message' => 'DOEPF column not found in Excel file'
+                );
+                echo json_encode($response);
+                return;
+            }
+
+            $updateCount = 0;
+            $errorCount = 0;
+
+            // Process each row
+            for ($i = 1; $i < count($rows); $i++) {
+                if (empty($rows[$i][$uannoColumnIndex])) {
+                    continue;
+                }
+
+                $uanno = trim($rows[$i][$uannoColumnIndex]);
+                
+                // Get the DOEPF date from Excel
+                $doepfValue = trim($rows[$i][$doepfColumnIndex]);
+                
+                // Convert date format if needed (assuming Excel date format is dd-mm-yyyy)
+                if (!empty($doepfValue)) {
+                    // Check if it's in Excel date format (dd-mm-yyyy)
+                    if (preg_match('/(\d{1,2})-(\d{1,2})-(\d{4})/', $doepfValue)) {
+                        $dateObj = \DateTime::createFromFormat('d-m-Y', $doepfValue);
+                        $inactiveDate = $dateObj->format('Y-m-d');
+                    } else {
+                        $inactiveDate = $doepfValue;
+                    }
+                } else {
+                    continue;
+                }
+                
+                $update_data = array(
+                    'uan_active' => 0,
+                    'date_of_uan_inactive' => $inactiveDate
+                );
+
+                $this->db->where('uan_no', $uanno);
+                $this->db->where('company_id', $companyId);
+                
+                if ($this->db->update('EMPMILL12.tbl_uan_master', $update_data)) {
+                    $updateCount++;
+                } else {
+                    $errorCount++;
+                }
+            }
+
+            $response = array(
+                'success' => true,
+                'message' => "Update completed. Updated: $updateCount records. Errors: $errorCount records."
+            );
+
+        } catch (Exception $e) {
+            $response = array(
+                'success' => false,
+                'message' => 'Error processing Excel file: ' . $e->getMessage()
+            );
+        }
+
+        echo json_encode($response);
+    }
+
+    public function downloadUanExcel() {
+        $companyId = $this->input->get('companyId');
+        
+        try {
+            // Fetch all UAN data for the company
+            $sql = "select tum.*,' ' eb_no,' ' wname,
+            case when tum.adhar_seeded=1 then 'Yes' else 'No' end adhseed,
+            case when uan_active=1 then 'Yes' else 'No' end uanact, 
+            date_format(date_of_uan_inactive,'%d-%m-%Y') dateofinactive
+            from EMPMILL12.tbl_uan_master tum 
+            where tum.is_active = 1 and tum.company_id = ?
+            order by uan_no";
+            
+            $query = $this->db->query($sql, array($companyId));
+            $records = $query->result();
+            
+            // Create a new Spreadsheet
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('UAN Master');
+            
+            // Add header row
+            $headers = ['UAN ID', 'EB No', 'Employee Name', 'UAN No', 'Name as per PF Online', 'PF No', 'Adhar Seeded', 'Active', 'Date of Inactive'];
+            $col = 1;
+            foreach ($headers as $header) {
+                $sheet->setCellValueByColumnAndRow($col, 1, $header);
+                $col++;
+            }
+            
+            // Style the header row
+            $headerStyle = [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '366092']],
+                'alignment' => ['horizontal' => 'center', 'vertical' => 'center']
+            ];
+            $sheet->getStyle('A1:I1')->applyFromArray($headerStyle);
+            
+            // Add data rows
+            $row = 2;
+            foreach ($records as $record) {
+                $sheet->setCellValueByColumnAndRow(1, $row, $record->uan_id);
+                $sheet->setCellValueByColumnAndRow(2, $row, $record->eb_no);
+                $sheet->setCellValueByColumnAndRow(3, $row, $record->wname);
+                // Set UAN No as text explicitly
+                $sheet->setCellValueByColumnAndRow(4, $row, $record->uan_no);
+                // Format UAN No column as text
+                $sheet->getCell('D' . $row)->setDataType(\PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueByColumnAndRow(5, $row, $record->name_as_per_pf_online);
+                $sheet->setCellValueByColumnAndRow(6, $row, $record->pf_no);
+                $sheet->setCellValueByColumnAndRow(7, $row, $record->adhseed);
+                $sheet->setCellValueByColumnAndRow(8, $row, $record->uanact);
+                $sheet->setCellValueByColumnAndRow(9, $row, $record->dateofinactive);
+                $row++;
+            }
+            
+            // Auto-size columns
+            foreach (range('A', 'I') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            
+            // Create Excel file
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            
+            // Set headers for download
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="UAN_Master_' . date('Y-m-d_H-i-s') . '.xlsx"');
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+            
+            // Output to the browser
+            $writer->save('php://output');
+            exit;
+            
+        } catch (Exception $e) {
+            echo 'Error: ' . $e->getMessage();
+        }
+    }
+
+    
     
        
 

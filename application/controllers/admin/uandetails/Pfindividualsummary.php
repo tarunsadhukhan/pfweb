@@ -97,8 +97,8 @@ class Pfindividualsummary extends CI_Controller {
  
         
          $sql="select uan_no,name_as_per_pf_online,sum(gac1amt) gac1amt,sum(gac10amt) gac10amt,sum(pac1amt) pac1amt,sum(pac10amt) pac10amt,
-sum(oustamt) oustamt from (
-select tpg.uan_id,tum.uan_no,tum.name_as_per_pf_online,epf_contibution gac1amt,eps_contribution+epf_eps_diff_contribution gac10amt,
+        sum(oustamt) oustamt from (
+        select tpg.uan_id,tum.uan_no,tum.name_as_per_pf_online,epf_contibution gac1amt,eps_contribution+epf_eps_diff_contribution gac10amt,
          ifnull(pac1amt,0) pac1amt,ifnull(pac10amt,0) pac10amt,epf_contibution+eps_contribution+epf_eps_diff_contribution-ifnull(pac1amt,0)-ifnull(pac10amt,0)
          oustamt,
          concat(UCASE(substr(MONTHNAME(month_end_date),1,3)),substr(month_end_date,1,4)) monname 

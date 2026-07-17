@@ -1080,7 +1080,7 @@ public function create_pfuplodfile()
                  ->where('tplud.pf_hdr_upload_id', $hdrid);
 
         $ldata = $this->db->get()->result_array();
-  //     echo $this->db->last_query();
+//       echo $this->db->last_query();
         // Build file content
         $sp     = '#~#';
         $logMsg = '';
@@ -1088,11 +1088,13 @@ public function create_pfuplodfile()
         // <01-09-2025 ,main 0/null  oldnew 1   11 
         // >01-09-2025 ,main =1 oldnew 2    6
 
-  //      echo $mndt.'--'.$cutoff.'--'.$mup.'--'.$oldnew;
+   //     echo $mndt.'--'.$cutoff.'--'.$mup.'--'.$oldnew;
         foreach ($ldata as $lrow) {
     //        echo 'cur mnth '.$mndt.'--'.'cut off '.$cutoff.'--'.'myp '.$mup.'--'.'oldnew '.$oldnew.'--uan '.$lrow['uanno'].'<br>';
                 if ( ($mndt< $cutoff) && $mup==9 && $oldnew==1) {
-                    $logMsg .= $lrow['uanno'] . $sp . $lrow['name_as_per_pf_online'] . $sp . $lrow['gross_wages'] . $sp . $lrow['epf_wages']
+     //       echo 'cur mnth '.$mndt.'--'.'cut off '.$cutoff.'--'.'myp '.$mup.'--'.'oldnew '.$oldnew.'--uan '.$lrow['uanno'].'<br>';
+
+                $logMsg .= $lrow['uanno'] . $sp . $lrow['name_as_per_pf_online'] . $sp . $lrow['gross_wages'] . $sp . $lrow['epf_wages']
                         .  $sp . $lrow['eps_wages'] . $sp . $lrow['edli_wages'] . $sp . $lrow['epf_contribution']
                         .  $sp . $lrow['eps_contribution'] . $sp . $lrow['epf_eps_diff_contribution'] . $sp . $lrow['ncp_days']
                         .  $sp . $lrow['refund'] . "\r\n";

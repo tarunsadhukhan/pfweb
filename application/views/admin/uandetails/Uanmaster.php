@@ -180,6 +180,16 @@ use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
     <button name="submit" id="resetuan" style="height: 50px;" type="submit"
       class="form-control btn btn-primary">Reset</button>
   </div>
+  <div class="form-group col-md-1">
+    <label for="purchaseDetailsPurchaseDate">Update Exit<span class="text-center"></span></label>
+    <button name="submit" id="updateexitbtn" style="height: 50px;" type="button"
+      class="form-control btn btn-warning">Update Exit</button>
+  </div>
+  <div class="form-group col-md-1">
+    <label for="purchaseDetailsPurchaseDate">Download<span class="text-center"></span></label>
+    <button name="submit" id="downloadexcelbtn" style="height: 50px;" type="button"
+      class="form-control btn btn-success">Download Excel</button>
+  </div>
 </div>
 
  <?php
@@ -255,6 +265,33 @@ use PHPUnit\TextUI\XmlConfiguration\CodeCoverage\Report\Php;
   <!-- /.content-wrapper -->
 
   <?php $this->load->view('admin/footer'); ?>
+
+<!-- Modal for Update Exit -->
+<div class="modal fade" id="updateExitModal" tabindex="-1" role="dialog" aria-labelledby="updateExitModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updateExitModalLabel">Update UAN Exit Status</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="updateExitForm">
+          <div class="form-group">
+            <label for="excelFile">Select Excel File (UANNO column required)</label>
+            <input type="file" class="form-control" id="excelFile" name="excelFile" accept=".xlsx,.xls" required>
+            <small class="form-text text-muted">The Excel file must contain a UANNO column with UAN numbers</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="submitExitBtn">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 
@@ -604,8 +641,72 @@ $("#saveuan").show();
         refreshDataTable();
       });
 
+      // Update Exit functionality
+      $('#updateexitbtn').click(function(event){
+        event.preventDefault();
+        $('#updateExitModal').modal('show');
+      });
 
+      $('#submitExitBtn').click(function(event){
+        event.preventDefault();
+        var fileInput = document.getElementById('excelFile');
+        var file = fileInput.files[0];
+        
+        if (!file) {
+          alert('Please select a file');
+          return;
+        }
 
+        var formData = new FormData();
+        formData.append('excelFile', file);
+        formData.append('companyId', $('#companyId').val());
+
+        // Disable the Update Exit button
+//        $('#updateexitbtn').attr('disabled', true);
+        $('#submitExitBtn').attr('disabled', true);
+
+        $.ajax({
+          url: "<?php echo base_url('admin/uandetails/Uanmaster/updateUanExitStatus'); ?>",
+          type: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+          dataType: "json",
+          success: function(response) {
+            if (response.success) {
+              alert(response.message);
+              $('#updateExitModal').modal('hide');
+              $('#excelFile').val('');
+              refreshDataTable();
+            } else {
+              alert('Error: ' + response.message);
+            }
+          },
+          error: function(xhr, status, error) {
+            alert('Error uploading file: ' + error);
+            console.log(xhr.responseText);
+          },
+          complete: function() {
+            // Re-enable the Update Exit button
+            $('#updateexitbtn').attr('disabled', false);
+            $('#submitExitBtn').attr('disabled', false);
+          }
+        });
+      });
+
+      // Download Excel functionality
+      $('#downloadexcelbtn').click(function(event){
+        event.preventDefault();
+        var companyId = $('#companyId').val();
+        
+        var downloadUrl = "<?php echo base_url('admin/uandetails/Uanmaster/downloadUanExcel'); ?>" + 
+                          "?companyId=" + encodeURIComponent(companyId);
+        
+        // Create a link and trigger download
+        var link = document.createElement('a');
+        link.href = downloadUrl;
+        link.click();
+      });
 
 
 
